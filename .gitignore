@@ -1,0 +1,5 @@
+/.idea
+couch_update.log
+*.orig
+Gemfile.lock
+secret.rb
