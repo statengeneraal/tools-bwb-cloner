@@ -92,11 +92,11 @@ class CloudantWetten < Couch::Server
 
   def is_blacklisted?(bwb_id)
     if head("/blacklist/#{bwb_id}").code == '200'
-      false
-    else
       url = "http://wetten.overheid.nl/xml.php?regelingID=#{bwb_id}"
       puts "Skipping #{bwb_id} because it took too long to download before (at #{url})"
       true
+    else
+      false
     end
   end
 
