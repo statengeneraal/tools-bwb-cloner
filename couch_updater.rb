@@ -17,8 +17,6 @@ class CouchUpdater
     @logger = Logger.new('couch_update.log')
 
     @couch = CloudantWetten.new
-    @bytesize = 0
-    @bulk=[]
     @expressions_added=0
     @new_expressions = []
     @metadata_changed = {}
@@ -126,8 +124,8 @@ class CouchUpdater
 
   # noinspection RubyStringKeysInHashInspection
   def add_new_expressions
-    @bytesize = 0
-    @bulk = []
+    @couch.bytesize = 0
+    @couch.cache = []
     @new_expressions.each do |doc|
       doc=doc.clone
       # Download (or skip) this document
@@ -135,10 +133,10 @@ class CouchUpdater
       if str_xml
         puts str_xml
         doc_bytesize = setup_doc_as_new_expression(doc, str_xml)
-        @bytesize += doc_bytesize
-        @bulk << doc
+        @couch.bytesize += doc_bytesize
+        @couch.cache << doc
         # Flush if array gets too big
-        flush_if_too_big
+        @couch.flush_if_too_big
 
         @expressions_added+=1
         if @expressions_added > 0 and @expressions_added % 10 == 0
@@ -148,11 +146,7 @@ class CouchUpdater
     end
 
     #Flush remaining
-    if @bulk.size > 0
-      bulk_write(@bulk)
-      @bytesize = 0
-      @bulk.clear
-    end
+    @couch.flush_cache
   end
 
   def get_gov_xml(bwb_id)
@@ -168,15 +162,6 @@ class CouchUpdater
     nil
   end
 
-# Flush documents in @bulk array if its size exceeds a certain size
-  def flush_if_too_big(max_bulk_size=15)
-    if @bytesize >= max_bulk_size*1024*1024 or @bulk.size >= 20 # Flush after some MB or 20 items
-      bulk_write(@bulk)
-      # puts "Flush #{bulk.size}"
-      @bulk.clear
-      @bytesize = 0
-    end
-  end
 
   def get_display_kind(doc)
     display_kind = nil

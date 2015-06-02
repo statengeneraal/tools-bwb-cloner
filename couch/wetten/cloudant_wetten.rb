@@ -6,6 +6,9 @@ include JSON
 include Secret
 
 class CloudantWetten < Couch::Server
+  attr_accessor :cache
+  attr_accessor :bytesize
+
   def initialize
     super(
         "#{WETTEN_NAME}.cloudant.com", '80',
@@ -14,7 +17,20 @@ class CloudantWetten < Couch::Server
             password: WETTEN_PASSWORD
         }
     )
+    @cache=[]
+    @bytesize = 0
   end
+
+  # Flush documents in @bulk array if its size exceeds a certain size
+  def flush_if_too_big(max_bulk_size=15)
+    if @bytesize >= max_bulk_size*1024*1024 or @cache.size >= 20 # Flush after some MB or 20 items
+      bulk_write(@cache)
+      # puts "Flush #{bulk.size}"
+      @cache.clear
+      @bytesize = 0
+    end
+  end
+
 
   # Returns all expressions for the BWB documents described by the given expressions. E.g. ['BWBxxx:2012-12-12'] would
   # return {'BWBxxx': [<all expressions for BWBxxx in our database>]}
@@ -103,5 +119,13 @@ class CloudantWetten < Couch::Server
   def add_to_blacklist(id)
     put_no_throw("/blacklist/#{id}", {_id: id}.to_json)
     puts "Added #{id} to blacklist"
+  end
+
+  def flush_cache
+    if @cache.size > 0
+      bulk_write(@cache)
+      @bytesize = 0
+      @cache.clear
+    end
   end
 end

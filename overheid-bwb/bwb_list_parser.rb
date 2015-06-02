@@ -1,4 +1,4 @@
-require_relative '../../cloner-bwb/couch/wetten/json_constants'
+require_relative '../couch/wetten/json_constants'
 require_relative 'xml_constants'
 require_relative 'extend_string'
 require 'nokogiri'
