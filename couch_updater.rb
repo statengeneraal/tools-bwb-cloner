@@ -131,7 +131,7 @@ class CouchUpdater
       # Download (or skip) this document
       str_xml = get_gov_xml(doc[JsonConstants::BWB_ID])
       if str_xml
-        puts str_xml
+        # puts str_xml
         doc_bytesize = setup_doc_as_new_expression(doc, str_xml)
         @couch.bytesize += doc_bytesize
         @couch.cache << doc
