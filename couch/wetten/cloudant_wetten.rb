@@ -128,4 +128,9 @@ class CloudantWetten < Couch::Server
       @cache.clear
     end
   end
+
+  def add_and_maybe_flush(doc)
+    cache << doc
+    flush_if_too_big
+  end
 end

@@ -106,6 +106,10 @@ module Couch
       ids
     end
 
+    def for_all_docs(database, limit=150, &block)
+      each_slice(database, limit, {}, &block)
+    end
+
     # Returns an array of the full documents for given database, possibly filtered with given parameters. Note that the 'include_docs' parameter must be set to true for this.
     def get_all_docs(database, params)
       unless params.include? 'include_docs' or params.include? :include_docs

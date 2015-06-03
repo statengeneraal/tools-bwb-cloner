@@ -59,6 +59,7 @@ class CouchUpdater
     doc['couchDbModificationDate'] = @today
     doc['displayKind'] = get_display_kind(doc)
     doc['addedToCouchDb'] = @today
+    doc['corpus'] = 'BWB'
     doc.delete('xml')
     # TODO add dcterms:tableOfContents, dcterms:publisher='KOOP'
     # TODO dcterm:seealso/sameas metalex id
