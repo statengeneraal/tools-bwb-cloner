@@ -83,7 +83,6 @@ class CouchUpdater
   end
 
 
-
   private
 
   # Download XML of given documents and upload the expressions to CouchDB
@@ -153,11 +152,11 @@ class CouchUpdater
     url = "http://wetten.overheid.nl/xml.php?regelingID=#{bwb_id}"
     begin
       return open(url, :read_timeout => 30*60).read
-    rescue Net::ReadTimeout
-      @logger.error "ERROR: Could not download #{url}"
+    rescue Net::ReadTimeout => e
+      @logger.error "Could not download #{url}: #{e.message}"
       @couch.add_to_blacklist(bwb_id)
-    rescue Exception
-      @logger.error "ERROR: Could not download #{url}"
+    rescue => e
+      @logger.error "ERROR: Could not download #{url}: #{e.message}"
     end
     nil
   end
@@ -172,7 +171,6 @@ class CouchUpdater
             'beleidsregel',
             'circulaire',
             'circulaire-BES',
-            'KB',
             'rijksKB',
             'rijkswet',
             'reglement',
@@ -183,7 +181,13 @@ class CouchUpdater
             'ministeriele-regeling',
             'ministeriele-regeling-archiefselectielijst',
             'ministeriele-regeling-BES'
-          display_kind = doc[JsonConstants::KIND].gsub('inisteriele', 'inisteriële').gsub('-', ' ').capitalize
+          display_kind = doc[JsonConstants::KIND]
+                             .capitalize
+                             .gsub('inisteriele', 'inisteriële')
+                             .gsub('-', ' ')
+                             .gsub(/[Bb][Ee][Ss]/, 'BES')
+                             .gsub(/[Kk][Bb]$/, 'KB')
+                             .gsub(/^[Aa][Mm][Vv][Bb]/, 'AMvB')
         when 'pbo',
             'zbo'
           display_kind = doc[JsonConstants::KIND]
@@ -195,7 +199,7 @@ class CouchUpdater
   end
 
 
-# Find gaps between database and BwbIdList.xml
+  # Find gaps between database and BwbIdList.xml
   def get_differences(rows_cloudant, bwb_list)
     existing_couch_ids={}
 
@@ -253,7 +257,6 @@ class CouchUpdater
       @disappeared << id
     end
   end
-
 
 
   def is_same(metadata1, metadata2)

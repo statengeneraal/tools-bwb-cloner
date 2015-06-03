@@ -252,8 +252,6 @@ class BwbListParser < Nokogiri::XML::SAX::Document
     else
       @content = chars
     end
-    # if @content.start_with? 'Convention'
-    # end
   end
 
 end
