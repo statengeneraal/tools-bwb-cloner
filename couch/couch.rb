@@ -72,6 +72,10 @@ module Couch
         http.read_timeout = read_timeout
         http.request(req)
       end
+      unless res.kind_of?(Net::HTTPSuccess)
+        puts "CouchDb responsed with error code #{res.code}"
+        puts "#{res.code}:#{res.message}\nMETHOD:#{req.method}\nURI:#{req.path}\n#{res.body}"
+      end
       res
     end
 
