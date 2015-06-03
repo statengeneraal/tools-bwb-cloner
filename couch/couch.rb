@@ -20,7 +20,7 @@ module Couch
     def head(uri)
       req = Net::HTTP::Head.new(uri)
       req.basic_auth @options[:name], @options[:password]
-      request_no_throw(req)
+      request(req,5*30,5*30,true)
     end
 
     def get(uri)
@@ -42,7 +42,7 @@ module Couch
       req.basic_auth @options[:name], @options[:password]
       req['Content-Type'] = 'text/plain;charset=utf-8'
       req.body = json
-      request(req)
+      request(req,5*30,5*30,true)
     end
 
     def post(uri, json)
@@ -53,28 +53,15 @@ module Couch
       request(req)
     end
 
-    def request(req, open_timeout=5*30, read_timeout=5*30)
+    def request(req, open_timeout=5*30, read_timeout=5*30, fail_silent=false)
       res = Net::HTTP.start(@host, @port) do |http|
         http.open_timeout = open_timeout
         http.read_timeout = read_timeout
         http.request(req)
       end
-      unless res.kind_of?(Net::HTTPSuccess)
+      unless fail_silent or res.kind_of?(Net::HTTPSuccess)
         puts "CouchDb responsed with error code #{res.code}"
         handle_error(req, res)
-      end
-      res
-    end
-
-    def request_no_throw(req, open_timeout=5*30, read_timeout=5*30)
-      res = Net::HTTP.start(@host, @port) do |http|
-        http.open_timeout = open_timeout
-        http.read_timeout = read_timeout
-        http.request(req)
-      end
-      unless res.kind_of?(Net::HTTPSuccess)
-        puts "CouchDb responsed with error code #{res.code}"
-        puts "#{res.code}:#{res.message}\nMETHOD:#{req.method}\nURI:#{req.path}\n#{res.body}"
       end
       res
     end
