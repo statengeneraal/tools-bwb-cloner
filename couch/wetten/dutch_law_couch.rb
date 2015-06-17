@@ -1,20 +1,18 @@
-require_relative '../couch'
+require 'couch'
 require_relative 'json_constants'
-require_relative '../secret'
 
 include JSON
-include Secret
 
-class CloudantWetten < Couch::Server
+class DutchLawCouch < Couch::Server
   attr_accessor :cache
   attr_accessor :bytesize
 
   def initialize
     super(
-        "#{WETTEN_NAME}.cloudant.com", '80',
+        ENV['COUCH_URL_WETTEN'],
         {
-            name: WETTEN_NAME,
-            password: WETTEN_PASSWORD
+            name: ENV['COUCH_USER_WETTEN'],
+            password: ENV['COUCH_PASSWORD_WETTEN']
         }
     )
     @cache=[]
@@ -22,7 +20,8 @@ class CloudantWetten < Couch::Server
   end
 
   # Flush documents in @bulk array if its size exceeds a certain size
-  def flush_if_too_big(max_bulk_size=15)
+  def flush_if_too_big(max_bulk_size=1)
+    # puts "#{@bytesize/1024/1024}MB"
     if @bytesize >= max_bulk_size*1024*1024 or @cache.size >= 20 # Flush after some MB or 20 items
       bulk_write(@cache)
       # puts "Flush #{bulk.size}"
@@ -44,7 +43,7 @@ class CloudantWetten < Couch::Server
 
     # Gather expressions for given BWBIDs
     expression_map = {}
-    each_slice_for_view('bwb', 'RegelingInfo', 'expressionsForBwbId', 750, {keys: bwb_ids}) do |rows|
+    rows_for_view('bwb', 'RegelingInfo', 'expressionsForBwbId', 750, {keys: bwb_ids}) do |rows|
       rows.each do |row|
         bwbid=row['key']
         set = expression_map[bwbid] || Set.new
@@ -62,8 +61,8 @@ class CloudantWetten < Couch::Server
     expression_map
   end
 
-  def bulk_write(docs, max_post_size=15)
-    flush_bulk_throttled('bwb', docs, max_post_size) do |res|
+  def bulk_write(docs, max_post_size: 15)
+    post_bulk_throttled('bwb', docs, max_size_mb: max_post_size) do |res|
       if res.code >= '200' and res.code < '300'
         resp = JSON.parse res.body
         error_count=0
@@ -79,13 +78,13 @@ class CloudantWetten < Couch::Server
   end
 
   # Get metadata of documents currently in CouchDB, along with a mapping of BWBIDs to paths and a list of docs that have its path field set wrongly
-  def get_cloudant_entries
+  def get_our_entries
     paths = {}
     wrong_paths = []
-    rows_cloudant = []
-    each_slice_for_view('bwb', 'RegelingInfo', 'allExpressions', 750) do |rowz|
-      rowz.each do |row|
-        rows_cloudant << row
+    our_rows = []
+    rows_for_view('bwb', 'RegelingInfo', 'allExpressions', 750) do |row_slice|
+      row_slice.each do |row|
+        our_rows << row
         bwb_id = row['key']
         if row['value']['path']
           if paths[bwb_id]
@@ -102,8 +101,8 @@ class CloudantWetten < Couch::Server
         end
       end
     end
-    puts "Found #{rows_cloudant.length} expressions in our own database"
-    return rows_cloudant, paths, wrong_paths
+    puts "Found #{our_rows.length} expressions in our own database"
+    return our_rows, paths, wrong_paths
   end
 
   def is_blacklisted?(bwb_id)
@@ -117,7 +116,7 @@ class CloudantWetten < Couch::Server
   end
 
   def add_to_blacklist(id)
-    put_no_throw("/blacklist/#{id}", {_id: id}.to_json)
+    put("/blacklist/#{id}", {_id: id}.to_json)
     puts "Added #{id} to blacklist"
   end
 

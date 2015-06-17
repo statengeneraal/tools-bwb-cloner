@@ -16,9 +16,33 @@ While the [MetaLex Document Server](http://doc.metalex.eu/) solves the first two
 third, it also introduces problems, like it performs destructive XML transforations and throws away the source material. 
 Also, the MDS has not been updated since April 2014. 
 
-Usage
------
-The database is hosted at [https://wetten.cloudant.com/](https://wetten.cloudant.com/) as a CouchDB database. 
+Updater usage
+-------------
+
+### Docker
+1. Install [Docker](https://www.docker.com/)
+2. Get the docker container for this project: `docker `
+Alternatively, try out the docker container
+
+### Manual
+1. Install Ruby
+
+2. Set environment variables: 
+
+| `COUCH_URL_WETTEN`      | URL to a CouchDB database     |
+| `COUCH_USER_WETTEN`     | username for CouchDB database |
+| `COUCH_PASSWORD_WETTEN` | password for CouchDB database |
+
+3.
+    > gem install bundler
+    > bundler install
+    > ruby update_couch_db
+
+4. Done.
+
+Database usage
+--------------
+The reference database is hosted at [https://wetten.cloudant.com/](https://wetten.cloudant.com/). Read access is public. 
 
 Following the standard [CouchDB Document API](https://wiki.apache.org/couchdb/HTTP_Document_API), one may access any 
 document through the `_all_docs` view with some query parameters set, .e.g,:

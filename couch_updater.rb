@@ -4,7 +4,7 @@ require 'base64'
 require 'logger'
 require 'nokogiri'
 require 'json'
-require_relative 'couch/wetten/cloudant_wetten'
+require_relative 'couch/wetten/dutch_law_couch'
 require_relative 'overheid-bwb/bwb_list_parser'
 require_relative 'overheid-bwb/bwb_download'
 
@@ -12,11 +12,12 @@ include BwbDownload
 
 class CouchUpdater
   LAWLY_ROOT = 'http://wetten.lawly.nl/'
+  BWB_TO_HTML = Nokogiri::XSLT(File.open('xslt/bwb_to_html.xslt'))
 
   def initialize
     @logger = Logger.new('couch_update.log')
 
-    @couch = CloudantWetten.new
+    @couch = DutchLawCouch.new
     @expressions_added=0
     @new_expressions = []
     @metadata_changed = {}
@@ -28,7 +29,7 @@ class CouchUpdater
     xml_source = download_metadata_dump
 
     # Get what's in OUR database
-    rows_cloudant, prev_paths, _ = @couch.get_cloudant_entries
+    rows_our_db, prev_paths, _ = @couch.get_our_entries
 
     # Parse government XML
     sax_handler = BwbListParser.new(prev_paths)
@@ -40,7 +41,7 @@ class CouchUpdater
     bwb_list = sax_handler.bwb_list
 
     # Find new expressions
-    get_differences(rows_cloudant, bwb_list)
+    get_differences(rows_our_db, bwb_list)
 
     puts "Found #{bwb_list[JsonConstants::LAW_LIST].length} expressions, of which #{@new_expressions.length} new, #{@metadata_changed.length} had metadata changed, #{@disappeared.length} disappeared"
     @logger.info "Found #{bwb_list[JsonConstants::LAW_LIST].length} expressions, of which #{@new_expressions.length} new, #{@metadata_changed.length} had metadata changed, #{@disappeared.length} disappeared"
@@ -66,21 +67,34 @@ class CouchUpdater
   end
 
   # noinspection RubyStringKeysInHashInspection
-  def add_original_xml(doc, b64_xml)
+  def add_html(doc, str_xml)
+    xml = Nokogiri::XML(str_xml.force_encoding('utf-8'))
+    b64_html = Base64.encode64(BWB_TO_HTML.transform(xml).to_s.force_encoding('utf-8'))
+    doc['_attachments'] = doc['_attachments'] || {}
+    doc['_attachments']['data.htm'] = {
+        'content_type' => 'text/html;charset=utf-8',
+        'data' => b64_html
+    }
+    b64_html.bytesize
+  end
+
+  # noinspection RubyStringKeysInHashInspection
+  def add_original_xml(doc, str_xml)
+    b64_xml = Base64.encode64(str_xml)
     doc['_attachments'] = doc['_attachments'] || {}
     doc['_attachments']['data.xml'] = {
         'content_type' => 'text/xml',
         'data' => b64_xml
     }
+    b64_xml.bytesize
   end
 
   # noinspection RubyStringKeysInHashInspection
   def setup_doc_as_new_expression(doc, str_xml)
     set_as_new_expr_no_attach(doc)
-    b64_xml = Base64.encode64(str_xml)
-    add_original_xml(doc, b64_xml)
-    puts "Adding bytesizes: #{(b64_xml.bytesize)/1024.0/1024.0} MB"
-    b64_xml.bytesize
+    size1 = add_original_xml(doc, str_xml)
+    size2 = add_html(doc, str_xml)
+    size1+size2
   end
 
 
@@ -129,6 +143,7 @@ class CouchUpdater
     @new_expressions.each do |doc|
       doc=doc.clone
       # Download (or skip) this document
+      puts "Adding #{doc['_id']}"
       str_xml = get_gov_xml(doc[JsonConstants::BWB_ID])
       if str_xml
         # puts str_xml
@@ -222,6 +237,7 @@ class CouchUpdater
       expression_id="#{bwb_id}:#{regeling_info[JsonConstants::DATE_LAST_MODIFIED]}"
       unless existing_couch_ids[expression_id] or @couch.is_blacklisted?(bwb_id)
         @logger.info "#{expression_id} was new."
+        puts "#{expression_id} was new."
         @new_expressions << regeling_info
       end
     end

@@ -10,7 +10,7 @@
 # include UpdateCouchHelper
 #
 # # Get what paths are already used in our database, and which docs should have a path (re)set
-# rows_cloudant, prev_paths, wrong_paths = get_cloudant_entries
+# rows_cloudant, prev_paths, wrong_paths = get_our_entries
 # rows_cloudant.clear
 # # wrong_paths = JSON.parse(open("http://#{Secret::CLOUDANT_NAME}.cloudant.com/bwb/_design/RegelingInfo/_view/pathsThatShouldBeFixed").read.force_encoding('utf-8'))['rows']
 # puts "#{wrong_paths.length} wrong or missing paths and #{prev_paths.length} previously set paths"
