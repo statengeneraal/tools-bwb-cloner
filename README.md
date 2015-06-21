@@ -34,7 +34,7 @@ docker run \
 ```
 
 ### Manual
-Install Ruby
+Install [Ruby 2.1.6](https://www.ruby-lang.org/)
 
 Set environment variables: 
 
@@ -44,10 +44,12 @@ Set environment variables:
 | `COUCH_USER_WETTEN`     | username for CouchDB database |
 | `COUCH_PASSWORD_WETTEN` | password for CouchDB database |
 
+Run script: 
+
 ```sh
-    gem install bundler
-    bundle install
-    ruby update_couch_db
+gem install bundler
+bundle install
+ruby update_couch_db
 ```
 
 Database usage
