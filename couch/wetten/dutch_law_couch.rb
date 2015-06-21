@@ -20,7 +20,7 @@ class DutchLawCouch < Couch::Server
   end
 
   # Flush documents in @bulk array if its size exceeds a certain size
-  def flush_if_too_big(max_bulk_size=1)
+  def flush_if_too_big(max_bulk_size=5)
     # puts "#{@bytesize/1024/1024}MB"
     if @bytesize >= max_bulk_size*1024*1024 or @cache.size >= 20 # Flush after some MB or 20 items
       bulk_write(@cache)
@@ -129,7 +129,11 @@ class DutchLawCouch < Couch::Server
   end
 
   def add_and_maybe_flush(doc)
-    cache << doc
+    add(doc)
     flush_if_too_big
+  end
+
+  def add(doc)
+    cache << doc
   end
 end

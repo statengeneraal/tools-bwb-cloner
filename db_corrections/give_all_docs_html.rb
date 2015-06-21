@@ -22,16 +22,21 @@ def get_xml(id)
 end
 
 i=0
-couch.all_docs('bwb') do |docs|
-  docs.each do |doc|
+couch.docs_for_view('bwb', 'RegelingInfo', 'has-no-html', 50000) do |docs|
+  puts docs.length
+  docs.sort_by { |doc| doc['_attachments']['data.xml']['length'] }.each do |doc|
     str_xml = get_xml(doc['_id'])
     add_html(doc, str_xml)
-    puts doc['_id']
+    # puts doc['_id']
     couch.add_and_maybe_flush doc
     i+=1
-    if i%250==0
+    if ((couch.cache.length+1) % (50)) == 0
+      # puts couch.cache.length
+    end
+    puts couch.cache.length
+    if i%(1)==0
       couch.flush_cache
-      puts ">#{i}"
+      puts ">>>>>>#{i}"
     end
   end
 end
