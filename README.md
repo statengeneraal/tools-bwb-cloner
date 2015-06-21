@@ -38,6 +38,7 @@ Install Ruby
 
 Set environment variables: 
 
+|                         |                               |
 | ---                     | ---                           |
 | `COUCH_URL_WETTEN`      | URL to a CouchDB database     |
 | `COUCH_USER_WETTEN`     | username for CouchDB database |
