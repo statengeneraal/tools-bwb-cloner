@@ -20,9 +20,18 @@ Updater usage
 -------------
 
 ### Docker
-1. Install [Docker](https://www.docker.com/)
-2. Get the docker container for this project: `docker `
-Alternatively, try out the docker container
+
+1. Install [Docker](https://www.docker.com/).
+2. 
+```sh
+# Run from Docker registry
+docker run \
+       -ti \
+       -e COUCH_URL_WETTEN={COUCHDB_URL} \
+       -e COUCH_USER_WETTEN={COUCHDB_USERNAME} \
+       -e COUCH_PASSWORD_WETTEN={COUCHDB_PASSWORD} \
+       digitalheir/bwb-cloner
+```
 
 ### Manual
 1. Install Ruby
@@ -35,10 +44,8 @@ Alternatively, try out the docker container
 
 3.
     > gem install bundler
-    > bundler install
+    > bundle install
     > ruby update_couch_db
-
-4. Done.
 
 Database usage
 --------------

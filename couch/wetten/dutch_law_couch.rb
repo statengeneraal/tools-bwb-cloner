@@ -11,10 +11,13 @@ class DutchLawCouch < Couch::Server
     super(
         ENV['COUCH_URL_WETTEN'],
         {
-            name: ENV['COUCH_USER_WETTEN'],
+            name: ENV['COUCH_USER_WETTEN']||ENV['COUCH_NAME_WETTEN'],
             password: ENV['COUCH_PASSWORD_WETTEN']
         }
     )
+    unless ENV['COUCH_URL_WETTEN']
+      raise 'COUCH_URL_WETTEN environment variable not set'
+    end
     @cache=[]
     @bytesize = 0
   end
@@ -82,23 +85,21 @@ class DutchLawCouch < Couch::Server
     paths = {}
     wrong_paths = []
     our_rows = []
-    rows_for_view('bwb', 'RegelingInfo', 'allExpressions', 750) do |row_slice|
-      row_slice.each do |row|
-        our_rows << row
-        bwb_id = row['key']
-        if row['value']['path']
-          if paths[bwb_id]
-            unless paths[bwb_id] == row['value']['path']
-              puts "WARNING: #{row['id']} had a different path than #{paths[bwb_id]} (namely #{row['value']['path']})"
-              wrong_paths << row
-            end
-          else
-            paths[bwb_id] = row['value']['path']
+    get_rows_for_view('bwb', 'RegelingInfo', 'allExpressions').each do |row|
+      our_rows << row
+      bwb_id = row['key']
+      if row['value']['path']
+        if paths[bwb_id]
+          unless paths[bwb_id] == row['value']['path']
+            puts "WARNING: #{row['id']} had a different path than #{paths[bwb_id]} (namely #{row['value']['path']})"
+            wrong_paths << row
           end
         else
-          # puts "WARNING: #{row['id']} did not have a path set"
-          wrong_paths << row
+          paths[bwb_id] = row['value']['path']
         end
+      else
+        # puts "WARNING: #{row['id']} did not have a path set"
+        wrong_paths << row
       end
     end
     puts "Found #{our_rows.length} expressions in our own database"

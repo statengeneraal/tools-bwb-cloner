@@ -143,7 +143,7 @@ class CouchUpdater
     @new_expressions.each do |doc|
       doc=doc.clone
       # Download (or skip) this document
-      puts "Adding #{doc['_id']}"
+      puts "Adding #{doc[JsonConstants::BWB_ID]}:#{doc[JsonConstants::DATE_LAST_MODIFIED]}"
       str_xml = get_gov_xml(doc[JsonConstants::BWB_ID])
       if str_xml
         # puts str_xml
@@ -223,7 +223,6 @@ class CouchUpdater
     rows_cloudant.each do |row|
       evaluate_row_against_bwbidlist(bwb_list, row)
     end
-
     # Find new expressions
     rows_cloudant.each do |row|
       id = row['id']
@@ -233,11 +232,12 @@ class CouchUpdater
       existing_couch_ids[id] = true
       existing_couch_ids[id.gsub('/', ':')] = true
     end
+
     bwb_list[JsonConstants::LAW_LIST].each do |bwb_id, regeling_info|
       expression_id="#{bwb_id}:#{regeling_info[JsonConstants::DATE_LAST_MODIFIED]}"
       unless existing_couch_ids[expression_id] or @couch.is_blacklisted?(bwb_id)
-        @logger.info "#{expression_id} was new."
-        puts "#{expression_id} was new."
+        # @logger.info "#{expression_id} was new."
+        # puts "#{expression_id} was new."
         @new_expressions << regeling_info
       end
     end
