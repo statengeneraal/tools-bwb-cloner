@@ -21,8 +21,8 @@ Updater usage
 
 ### Docker
 
-1. Install [Docker](https://www.docker.com/).
-2. 
+Install [Docker](https://www.docker.com/).
+ 
 ```sh
 # Run from Docker registry
 docker run \
@@ -34,18 +34,20 @@ docker run \
 ```
 
 ### Manual
-1. Install Ruby
+Install Ruby
 
-2. Set environment variables: 
+Set environment variables: 
 
+| ---                     | ---                           |
 | `COUCH_URL_WETTEN`      | URL to a CouchDB database     |
 | `COUCH_USER_WETTEN`     | username for CouchDB database |
 | `COUCH_PASSWORD_WETTEN` | password for CouchDB database |
 
-3.
-    > gem install bundler
-    > bundle install
-    > ruby update_couch_db
+```sh
+    gem install bundler
+    bundle install
+    ruby update_couch_db
+```
 
 Database usage
 --------------
