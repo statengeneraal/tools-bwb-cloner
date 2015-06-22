@@ -102,6 +102,7 @@ class CouchUpdater
 
   # Download XML of given documents and upload the expressions to CouchDB
   def process_changes
+    GC.start
     add_new_expressions
     process_changed_metadata
     puts 'Done.'
