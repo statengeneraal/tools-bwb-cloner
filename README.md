@@ -1,3 +1,6 @@
+## ⚠ This repository is no longer mantained
+Dutch government has changed (and greatly improved) its open data service which now completely overshadows this project. This repository now only serves as an artifact of history.
+
 BWB Mirror
 ===============
 This project contains some scripts to clone Dutch laws from the official government CRM to a CouchDB database. The 
